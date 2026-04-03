@@ -2,7 +2,7 @@ import telebot
 from telebot import types
 from datetime import datetime
 
-TOKEN = "8301712601:AAGpFgchLpumQhK5c0rf3Ygqk0NgLvmGsBY"
+TOKEN = "8301712601:AAEfyXav6a0cwsViQ-A9a3NqzrhYepAEfvM"
 ADMIN_ID = 8360625353
 
 import json
