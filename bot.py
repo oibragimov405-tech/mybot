@@ -2,6 +2,8 @@ import telebot
 from telebot import types
 from datetime import datetime
 
+CHANNEL = "@nexowievnews"
+
 TOKEN = "8301712601:AAEfyXav6a0cwsViQ-A9a3NqzrhYepAEfvM"
 ADMIN_ID = 8360625353
 
@@ -15,6 +17,13 @@ except:
 users = [u for u in users if isinstance(u, dict)]
 
 bot = telebot.TeleBot(TOKEN)
+
+def check_subscribe(user_id):
+    try:
+        member = bot.get_chat_member(CHANNEL, user_id)
+        return member.status in ["member", "creator", "administrator"]
+    except:
+        return False
 
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
@@ -55,6 +64,22 @@ def callback(call):
 # ================== START ==================
 @bot.message_handler(commands=['start'])
 def start(message):
+    if not check_subscribe(message.from_user.id):
+        markup = telebot.types.InlineKeyboardMarkup()
+        btn = telebot.types.InlineKeyboardButton(
+            "📢 Kanalga obuna bo‘lish",
+            url="https://t.me/nexowiev_channel"
+        )
+        markup.add(btn)
+
+        bot.send_message(
+            message.chat.id,
+            "❌ Avval kanalga obuna bo‘ling!",
+            reply_markup=markup
+        )
+        return
+
+    bot.send_message(message.chat.id, "Bot ishlayapti ✅")
     user_id = message.from_user.id
 
     if not any(isinstance(u, dict) and u.get('id') == user_id for u in users):
