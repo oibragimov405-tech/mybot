@@ -247,29 +247,32 @@ def send_broadcast(message):
         with open("users.json", "r") as f:
             users = json.load(f)
     except:
-        users = []
+        users = {}
 
-    users = [u for u in users if isinstance(u, dict)]
-
-    for user in users:
+    for user_id in users:
         try:
-            bot.send_message(user.get('id'), message.text)
-        except:
-            pass
+            bot.send_message(user_id, message.text)
+        except Exception as e:
+            print(e)
 @bot.message_handler(func=lambda m: m.text == "👥 Userlar")
 def show_users(message):
     if message.from_user.id != ADMIN_ID:
         return
 
+    try:
+        with open("users.json", "r") as f:
+            users = json.load(f)
+    except:
+        users = {}
+
     text = "👥 Userlar ro‘yxati:\n\n"
 
-    bot.send_message(message.chat.id, text, parse_mode="Markdown")
-text = ""
+    for i, user_id in enumerate(users, start=1):
+        user = users[user_id]
+        text += f"{i}. {user.get('name')} | ID: {user_id}\n"
 
-for i, user in enumerate(users, start=1):
-    if not isinstance(user, dict):
-        continue
-    text += f"{i}. {user.get('name')} | ID: {user.get('id')}\n"
+    bot.send_message(message.chat.id, text)
+
 
 @bot.message_handler(func=lambda m: m.text == "💰 Balans qo‘shish")
 def add_balance_start(message):
