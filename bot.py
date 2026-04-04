@@ -2,7 +2,7 @@ import telebot
 from telebot import types
 from datetime import datetime
 
-CHANNEL = "@nexowievnews"
+CHANNEL = "https://t.me/nexoweivnews"
 
 TOKEN = "8301712601:AAEfyXav6a0cwsViQ-A9a3NqzrhYepAEfvM"
 ADMIN_ID = 8360625353
