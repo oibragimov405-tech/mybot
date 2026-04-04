@@ -4,7 +4,7 @@ from datetime import datetime
 
 CHANNEL = -1003705539547
 
-TOKEN = "8301712601:AAFK-0RJdeAzYTQT6nVtRNOmhJ4q6_pkZ6g"
+TOKEN = "8301712601:AAFr6LOTc6tQ_jBHHg21XL9GM8Us6pEhovk"
 ADMIN_ID = 8360625353
 
 import json
@@ -90,10 +90,17 @@ def start(message):
 
     if not any(isinstance(u, dict) and u.get('id') == user_id for u in users):
         user = {
-            "id": user_id,
-            "name": message.from_user.first_name,
-            "username": message.from_user.username
-        }
+    "id": user_id,
+    "name": message.from_user.first_name,
+    "username": message.from_user.username,
+    "balance": 0,
+    "spent": 0,
+    "deposited": 0,
+    "orders": 0,
+    "numbers": 0,
+    "referrals": 0,
+    "stars": 0
+}
 
         users.append(user)
 
@@ -103,7 +110,7 @@ def start(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
 
     markup.row("📞 Nomer olish", "🛍 Xizmatlar")
-    markup.row("📄 Mening hisobim", "📦 Buyurtmalarim")
+    markup.row("💳 Mening hisobim", "📦 Buyurtmalarim")
     markup.row("💰 Hisob to‘ldirish", "🚀 Kanalim")
     markup.row("📚 Qo‘llanma", "☎️ Qo‘llab-quvvatlash")
 
@@ -202,54 +209,71 @@ Do‘stingiz shartlarni bajarmasa, bonus berilmaydi.
 # ================== HISOBIM ==================
 @bot.message_handler(func=lambda m: m.text == "💳 Mening hisobim")
 def kabinet(message):
- if not check_subscribe(message.from_user.id):
-    bot.send_message(message.chat.id, "❌ Avval kanalga obuna bo‘ling!")
-    return  
+    if not check_subscribe(message.from_user.id):
+        bot.send_message(message.chat.id, "❌ Avval kanalga obuna bo‘ling!")
+        return  
+
+    user_id = message.from_user.id
+
+    # userni topamiz
+    user_data = next((u for u in users if u.get("id") == user_id), None)
+
+    if not user_data:
+        bot.send_message(message.chat.id, "❌ User topilmadi")
+        return
+
+    balance = user_data.get("balance", 0)
+    spent = user_data.get("spent", 0)
+    deposited = user_data.get("deposited", 0)
+
     vaqt = datetime.now().strftime("%H:%M")
 
     text = f"""🪪 Shaxsiy kabinet
 
 ┌ Ism: {message.from_user.first_name}
-├ ID: {message.from_user.id}
+├ ID: {user_id}
 └ Aloqa: mavjud emas
 
 💰 Moliya:
-├ Asosiy balans: 0 so‘m
-├ Sarflangan: 0 so‘m
-└ Kiritilgan: 0 so‘m
+├ Asosiy balans: {balance} so‘m
+├ Sarflangan: {spent} so‘m
+└ Kiritilgan: {deposited} so‘m
 
 📊 Statistika:
-├ Buyurtmalar: 0 ta
-├ Olingan raqamlar: 0 ta
-├ Takliflar: 0 kishi
-└ Telegram Stars: 0 ⭐
+├ Buyurtmalar: {user_data.get("orders", 0)} ta
+├ Olingan raqamlar: {user_data.get("numbers", 0)} ta
+├ Takliflar: {user_data.get("referrals", 0)} kishi
+└ Telegram Stars: {user_data.get("stars", 0)} ⭐
 
-⏰ Yuborilgan vaqt: {vaqt}
+⏰ Vaqt: {vaqt}
 """
 
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     markup.row("💸 Pul ishlash", "🌐 Tilni o‘zgartirish")
     markup.row("➡️ Pul o‘tkazish", "🔙 Orqaga")
 
+    bot.send_message(message.chat.id, text, reply_markup=markup)
+
 
 # ================== ORQAGA ==================
-@bot.message_handler(func=lambda m: m.text == "🔙 Orqaga")
+@bot.message_handler(func=lambda m: "Orqaga" in m.text)
 def orqaga(message):
- if not check_subscribe(message.from_user.id):
-    bot.send_message(message.chat.id, "❌ Avval kanalga obuna bo‘ling!")
-    return   
+    if not check_subscribe(message.from_user.id):
+        bot.send_message(message.chat.id, "❌ Avval kanalga obuna bo‘ling!")
+        return   
+
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     markup.row("📱 Nomer olish", "🛍 Xizmatlar")
-    markup.row("📄 Mening hisobim", "📦 Buyurtmalarim")
-    markup.row("💰 Hisob to‘ldirish", "📢 Kanalim")
-    markup.row("📚 Qo‘llanma", "🆘 Qo‘llab-quvvatlash")
+    markup.row("💳 Mening hisobim", "📦 Buyurtmalarim")
+    markup.row("💰 Hisob to‘ldirish", "🚀 Kanalim")
+    markup.row("📚 Qo‘llanma", "☎️ Qo‘llab-quvvatlash")
 
     if message.from_user.id == ADMIN_ID:
         markup.row("⚙️ Admin panel")
     else:
         markup.row("🤝 Hamkor bo‘lish")
 
-    bot.send_message(message.chat.id, "Menu", reply_markup=markup)
+    bot.send_message(message.chat.id, "🏠 Menu", reply_markup=markup)
 
 
 # ================== YORDAM (ADMIN) ==================
