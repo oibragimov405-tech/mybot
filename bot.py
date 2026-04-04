@@ -4,7 +4,7 @@ from datetime import datetime
 
 CHANNEL = "@nexoweivnews" 
 
-TOKEN = "8301712601:AAEfyXav6a0cwsViQ-A9a3NqzrhYepAEfvM"
+TOKEN = "8301712601:AAGOak2XJ11p45MwJq-xECYVCXP5HPlZyGc"
 ADMIN_ID = 8360625353
 
 import json
@@ -17,6 +17,12 @@ except:
 users = [u for u in users if isinstance(u, dict)]
 
 bot = telebot.TeleBot(TOKEN)
+
+@bot.message_handler(commands=['id'])
+def get_id(message):
+    chat = bot.get_chat("@nexoweivnews")
+    print(chat.id)
+    bot.send_message(message.chat.id, str(chat.id))
 
 def check_subscribe(user_id):
     try:
