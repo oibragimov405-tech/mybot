@@ -2,9 +2,9 @@ import telebot
 from telebot import types
 from datetime import datetime
 
-CHANNEL = "@nexoweivnews" 
+CHANNEL = -1003705539547
 
-TOKEN = "8301712601:AAGOak2XJ11p45MwJq-xECYVCXP5HPlZyGc"
+TOKEN = "8301712601:AAHdvaN9BV9ReFNq9NwZ-eG07WVfLmBHma0"
 ADMIN_ID = 8360625353
 
 import json
@@ -71,10 +71,10 @@ def callback(call):
 @bot.message_handler(commands=['start'])
 def start(message):
     if not check_subscribe(message.from_user.id):
-        markup = telebot.types.InlineKeyboardMarkup()
-        btn = telebot.types.InlineKeyboardButton(
+        markup = types.InlineKeyboardMarkup()
+        btn = types.InlineKeyboardButton(
             "📢 Kanalga obuna bo‘lish",
-            url="https://t.me/nexowiev_channel"
+            url="https://t.me/nexoweivnews"
         )
         markup.add(btn)
 
@@ -132,6 +132,10 @@ def start(message):
 
 @bot.message_handler(func=lambda message: message.text == "🛍 Xizmatlar")
 def xizmatlar(message):
+    if not check_subscribe(message.from_user.id):
+        bot.send_message(message.chat.id, "❌ Avval kanalga obuna bo‘ling!")
+        return
+
     bot.send_message(
         message.chat.id,
         "Tarmoqlardan birini tanlang:",
@@ -140,8 +144,12 @@ def xizmatlar(message):
 
 
 # ===== QOLLAB QUVVATLASH =====
-@bot.message_handler(func=lambda m: m.text == "🆘 Qo‘llab-quvvatlash")
+@bot.message_handler(func=lambda m: m.text == "☎️ Qo‘llab-quvvatlash")
 def help_user(message):
+    if not check_subscribe(message.from_user.id):
+        bot.send_message(message.chat.id, "❌ Avval kanalga obuna bo‘ling!")
+        return
+
     msg = bot.send_message(message.chat.id, "✍️ Xabaringizni yozing:")
     bot.register_next_step_handler(msg, send_to_admin)
 
@@ -149,6 +157,10 @@ def help_user(message):
 print("Bot ishlayapti...")
 @bot.message_handler(func=lambda m: m.text == "📱 Telegram")
 def telegram_menu(message):
+    if not check_subscribe(message.from_user.id):
+        bot.send_message(message.chat.id, "❌ Avval kanalga obuna bo‘ling!")
+        return
+
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     markup.row("⭐ Premium", "🌟 Stars")
     markup.row("🔙 Orqaga")
@@ -160,6 +172,9 @@ def telegram_menu(message):
 @bot.message_handler(commands=['qollanma'])
 @bot.message_handler(func=lambda m: m.text == "📚 Qo‘llanma")
 def qollanma(message):
+    if not check_subscribe(message.from_user.id):
+        bot.send_message(message.chat.id, "❌ Avval kanalga obuna bo‘ling!")
+        return
     text = """⚫ Botdan foydalanish yo‘riqnomasi:
 
 🔄 Buyurtma bekor qilindimi?
@@ -187,6 +202,9 @@ Do‘stingiz shartlarni bajarmasa, bonus berilmaydi.
 # ================== HISOBIM ==================
 @bot.message_handler(func=lambda m: m.text == "💳 Mening hisobim")
 def kabinet(message):
+ if not check_subscribe(message.from_user.id):
+    bot.send_message(message.chat.id, "❌ Avval kanalga obuna bo‘ling!")
+    return  
     vaqt = datetime.now().strftime("%H:%M")
 
     text = f"""🪪 Shaxsiy kabinet
@@ -217,6 +235,9 @@ def kabinet(message):
 # ================== ORQAGA ==================
 @bot.message_handler(func=lambda m: m.text == "🔙 Orqaga")
 def orqaga(message):
+ if not check_subscribe(message.from_user.id):
+    bot.send_message(message.chat.id, "❌ Avval kanalga obuna bo‘ling!")
+    return   
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     markup.row("📱 Nomer olish", "🛍 Xizmatlar")
     markup.row("📄 Mening hisobim", "📦 Buyurtmalarim")
@@ -230,17 +251,14 @@ def orqaga(message):
 
     bot.send_message(message.chat.id, "Menu", reply_markup=markup)
 
-@bot.message_handler(func=lambda message: message.text == "🔙 Orqaga")
-def orqaga(message):
-    bot.send_message(
-        message.chat.id,
-        "🏠 Asosiy menyu:",
-        reply_markup=main_menu()
-    )
 
 # ================== YORDAM (ADMIN) ==================
-@bot.message_handler(func=lambda m: m.text == "☎️ Qo‘llab-quvvatlash")
-def help_user(message):
+@bot.message_handler(func=lambda m: m.text == "☎️ Yordam")
+def yordam(message):
+    if not check_subscribe(message.from_user.id):
+        bot.send_message(message.chat.id, "❌ Avval kanalga obuna bo‘ling!")
+        return
+
     msg = bot.send_message(message.chat.id, "✍️ Xabaringizni yozing:")
     bot.register_next_step_handler(msg, send_to_admin)
 
