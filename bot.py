@@ -4,7 +4,7 @@ from datetime import datetime
 
 CHANNEL = -1003705539547
 
-TOKEN = "8301712601:AAHdvaN9BV9ReFNq9NwZ-eG07WVfLmBHma0"
+TOKEN = "8301712601:AAGIGvzDkaKSihzjDH99mwDOwpAhT85V7lQ"
 ADMIN_ID = 8360625353
 
 import json
