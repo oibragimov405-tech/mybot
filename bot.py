@@ -2,9 +2,48 @@ import telebot
 from telebot import types
 from datetime import datetime
 
+# ====== TIL SISTEMA ======
+user_lang = {}
+
+def get_lang(user_id):
+    return user_lang.get(user_id, "uz")
+
+def set_lang(user_id, lang):
+    user_lang[user_id] = lang
+
+texts = {
+    "uz": {
+        "start": "👋 Assalomu alaykum!",
+        "menu": "🏠 Menu",
+        "subscribe": "❌ Avval kanalga obuna bo‘ling!",
+        "services": "🛍 Xizmatlar",
+        "cabinet": "💳 Mening hisobim",
+        "help": "☎️ Qo‘llab-quvvatlash",
+        "lang": "🌐 Tilni tanlang:"
+    },
+    "ru": {
+        "start": "👋 Здравствуйте!",
+        "menu": "🏠 Меню",
+        "subscribe": "❌ Подпишитесь на канал!",
+        "services": "🛍 Услуги",
+        "cabinet": "💳 Мой кабинет",
+        "help": "☎️ Поддержка",
+        "lang": "🌐 Выберите язык:"
+    },
+    "en": {
+        "start": "👋 Hello!",
+        "menu": "🏠 Menu",
+        "subscribe": "❌ Subscribe to channel!",
+        "services": "🛍 Services",
+        "cabinet": "💳 My account",
+        "help": "☎️ Support",
+        "lang": "🌐 Choose language:"
+    }
+}
+
 CHANNEL = -1003705539547
 
-TOKEN = "8301712601:AAFr6LOTc6tQ_jBHHg21XL9GM8Us6pEhovk"
+TOKEN = "8301712601:AAE2vBDM4p0senJ9jdYZtxp8k3-D5CKiG7A"
 ADMIN_ID = 8360625353
 
 import json
@@ -85,56 +124,18 @@ def start(message):
         )
         return
 
-    bot.send_message(message.chat.id, "Bot ishlayapti ✅")
-    user_id = message.from_user.id
+def start(message):
+    lang = get_lang(message.from_user.id)
+    t = texts[lang]
 
-    if not any(isinstance(u, dict) and u.get('id') == user_id for u in users):
-        user = {
-    "id": user_id,
-    "name": message.from_user.first_name,
-    "username": message.from_user.username,
-    "balance": 0,
-    "spent": 0,
-    "deposited": 0,
-    "orders": 0,
-    "numbers": 0,
-    "referrals": 0,
-    "stars": 0
-}
+    bot.send_message(message.chat.id,          t["start"])
+    
 
-        users.append(user)
-
-        with open("users.json", "w") as f:
-            json.dump(users, f)
-
+@bot.message_handler(func=lambda m: m.text == "🌐 Tilni o‘zgartirish")
+def choose_lang(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-
-    markup.row("📞 Nomer olish", "🛍 Xizmatlar")
-    markup.row("💳 Mening hisobim", "📦 Buyurtmalarim")
-    markup.row("💰 Hisob to‘ldirish", "🚀 Kanalim")
-    markup.row("📚 Qo‘llanma", "☎️ Qo‘llab-quvvatlash")
-
-    if message.from_user.id == ADMIN_ID:
-        markup.row("⚙️ Admin panel")
-    else:
-        markup.row("🤝 Hamkor bo‘lish")
-
-    text = f"""
-👋 Assalomu alaykum!
-
-🤖 @{bot.get_me().username} - xizmatlar boti
-
-📊 Xizmatlar:
-👥 Obunachilar
-📱 Virtual raqamlar
-⭐ Telegram Stars
-
-⚡ Tezkor • Qulay • Ishonchli
-
-📚 Qo'llanma: /qollanma
-"""
-
-    bot.send_message(message.chat.id, text, reply_markup=markup)
+    markup.row("🇺🇿 O‘zbek", "🇷🇺 Русский", "🇬🇧 English")
+    bot.send_message(message.chat.id, "Tilni tanlang:", reply_markup=markup)        
 
 
 @bot.message_handler(func=lambda message: message.text == "🛍 Xizmatlar")
@@ -148,6 +149,16 @@ def xizmatlar(message):
         "Tarmoqlardan birini tanlang:",
         reply_markup=xizmatlar_menu()
     )
+@bot.message_handler(func=lambda m: m.text in ["🇺🇿 O‘zbek", "🇷🇺 Русский", "🇬🇧 English"])
+def set_language(message):
+    if "O‘zbek" in message.text:
+       set_lang(message.from_user.id, "uz")
+    elif "Русский" in message.text:
+        set_lang(message.from_user.id, "ru")
+    else:
+        set_lang(message.from_user.id, "en")
+
+    bot.send_message(message.chat.id, "✅ Til o‘zgartirildi")
 
 
 # ===== QOLLAB QUVVATLASH =====
@@ -336,13 +347,12 @@ def show_users(message):
         with open("users.json", "r") as f:
             users = json.load(f)
     except:
-        users = {}
+        users = []
 
     text = "👥 Userlar ro‘yxati:\n\n"
 
-    for i, user_id in enumerate(users, start=1):
-        user = users[user_id]
-        text += f"{i}. {user.get('name')} | ID: {user_id}\n"
+    for i, user in enumerate(users, start=1):
+        text += f"{i}. {user.get('name')} | ID: {user.get('id')}\n"
 
     bot.send_message(message.chat.id, text)
 
