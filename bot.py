@@ -2,48 +2,9 @@ import telebot
 from telebot import types
 from datetime import datetime
 
-# ====== TIL SISTEMA ======
-user_lang = {}
-
-def get_lang(user_id):
-    return user_lang.get(user_id, "uz")
-
-def set_lang(user_id, lang):
-    user_lang[user_id] = lang
-
-texts = {
-    "uz": {
-        "start": "👋 Assalomu alaykum!",
-        "menu": "🏠 Menu",
-        "subscribe": "❌ Avval kanalga obuna bo‘ling!",
-        "services": "🛍 Xizmatlar",
-        "cabinet": "💳 Mening hisobim",
-        "help": "☎️ Qo‘llab-quvvatlash",
-        "lang": "🌐 Tilni tanlang:"
-    },
-    "ru": {
-        "start": "👋 Здравствуйте!",
-        "menu": "🏠 Меню",
-        "subscribe": "❌ Подпишитесь на канал!",
-        "services": "🛍 Услуги",
-        "cabinet": "💳 Мой кабинет",
-        "help": "☎️ Поддержка",
-        "lang": "🌐 Выберите язык:"
-    },
-    "en": {
-        "start": "👋 Hello!",
-        "menu": "🏠 Menu",
-        "subscribe": "❌ Subscribe to channel!",
-        "services": "🛍 Services",
-        "cabinet": "💳 My account",
-        "help": "☎️ Support",
-        "lang": "🌐 Choose language:"
-    }
-}
-
 CHANNEL = -1003705539547
 
-TOKEN = "8301712601:AAGzDiNpltU0lokcewPsq9gpXLW6Q8REHu8"
+TOKEN = "8301712601:AAEfCiJgIxCya2FR4gz2DbdD322Q419a3oY"
 ADMIN_ID = 8360625353
 
 import json
@@ -56,6 +17,18 @@ except:
 users = [u for u in users if isinstance(u, dict)]
 
 bot = telebot.TeleBot(TOKEN)
+
+@bot.message_handler(commands=['pay'])
+def pay(message):
+    bot.send_invoice(
+        chat_id=message.chat.id,
+        title="⭐ Stars sotib olish",
+        description="Telegram Stars orqali to‘lov",
+        payload="stars_payment",
+        provider_token="",  # BO‘SH
+        currency="XTR",     # ⭐
+        prices=[types.LabeledPrice("100 Stars", 100)]
+    )
 
 @bot.message_handler(commands=['id'])
 def get_id(message):
@@ -124,18 +97,56 @@ def start(message):
         )
         return
 
-def start(message):
-    lang = get_lang(message.from_user.id)
-    t = texts[lang]
+    bot.send_message(message.chat.id, "Bot ishlayapti ✅")
+    user_id = message.from_user.id
 
-    bot.send_message(message.chat.id,          t["start"])
-    
+    if not any(isinstance(u, dict) and u.get('id') == user_id for u in users):
+        user = {
+    "id": user_id,
+    "name": message.from_user.first_name,
+    "username": message.from_user.username,
+    "balance": 0,
+    "spent": 0,
+    "deposited": 0,
+    "orders": 0,
+    "numbers": 0,
+    "referrals": 0,
+    "stars": 0
+}
 
-@bot.message_handler(func=lambda m: m.text == "🌐 Tilni o‘zgartirish")
-def choose_lang(message):
+        users.append(user)
+
+        with open("users.json", "w") as f:
+            json.dump(users, f)
+
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.row("🇺🇿 O‘zbek", "🇷🇺 Русский", "🇬🇧 English")
-    bot.send_message(message.chat.id, "Tilni tanlang:", reply_markup=markup)        
+
+    markup.row("📞 Nomer olish", "🛍 Xizmatlar")
+    markup.row("💳 Mening hisobim", "📦 Buyurtmalarim")
+    markup.row("💰 Hisob to‘ldirish", "🚀 Kanalim")
+    markup.row("📚 Qo‘llanma", "☎️ Qo‘llab-quvvatlash")
+
+    if message.from_user.id == ADMIN_ID:
+        markup.row("⚙️ Admin panel")
+    else:
+        markup.row("🤝 Hamkor bo‘lish")
+
+    text = f"""
+👋 Assalomu alaykum!
+
+🤖 @{bot.get_me().username} - xizmatlar boti
+
+📊 Xizmatlar:
+👥 Obunachilar
+📱 Virtual raqamlar
+⭐ Telegram Stars
+
+⚡ Tezkor • Qulay • Ishonchli
+
+📚 Qo'llanma: /qollanma
+"""
+
+    bot.send_message(message.chat.id, text, reply_markup=markup)
 
 
 @bot.message_handler(func=lambda message: message.text == "🛍 Xizmatlar")
@@ -149,16 +160,60 @@ def xizmatlar(message):
         "Tarmoqlardan birini tanlang:",
         reply_markup=xizmatlar_menu()
     )
-@bot.message_handler(func=lambda m: m.text in ["🇺🇿 O‘zbek", "🇷🇺 Русский", "🇬🇧 English"])
-def set_language(message):
-    if "O‘zbek" in message.text:
-       set_lang(message.from_user.id, "uz")
-    elif "Русский" in message.text:
-        set_lang(message.from_user.id, "ru")
-    else:
-        set_lang(message.from_user.id, "en")
+@bot.message_handler(func=lambda m: m.text == "💰 Hisob to‘ldirish")
+def deposit(message):
+    if not check_subscribe(message.from_user.id):
+        bot.send_message(message.chat.id, "❌ Avval kanalga obuna bo‘ling!")
+        return
 
-    bot.send_message(message.chat.id, "✅ Til o‘zgartirildi")
+    text = """💎 Balansni to‘ldirish
+
+➕ Balansga pul qo‘shish uchun to‘lov tizimini tanlang:
+
+💳 Karta (Avtomatik)
+O‘zingizga qulay ilovadan bot bergan kartaga bot ko‘rsatgan summani yuborasiz va avto tushadi.
+
+⭐ Stars (Avtomatik)
+Telegram stars orqali botga to‘lov qilishingiz mumkin
+
+🔥 O‘zingizga qulay bo‘lgan to‘lov turini tanlang"""
+
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+
+    markup.row("💳 Karta (Avtomatik)")
+    markup.row("⭐ Stars (Avtomatik)")
+    markup.row("🧑‍💻 Admin orqali hisob to‘ldirish")
+    markup.row("🔙 Orqaga")
+
+    bot.send_message(message.chat.id, text, reply_markup=markup)
+# ⭐ Stars tugma bosilganda
+@bot.message_handler(func=lambda m: m.text == "⭐ Stars (Avtomatik)")
+def stars_payment(message):
+    bot.send_invoice(
+        message.chat.id,              # chat_id
+        "⭐ Stars sotib olish",        # title
+        "Telegram Stars orqali to‘lov", # description
+        "stars123",                   # ✅ payload (BU MAJBURIY!)
+        "",                           # provider_token
+        "XTR",                        # currency
+        [types.LabeledPrice("100 Stars", 100)]
+    )   
+@bot.message_handler(func=lambda m: m.text == "🧑‍💻 Admin orqali hisob to‘ldirish")
+def admin_contact(message):
+    markup = types.InlineKeyboardMarkup()
+
+    markup.add(
+        types.InlineKeyboardButton(
+            "✍️ Adminga yozish",
+            url="https://t.me/smmgarand"
+        )
+    )
+
+    bot.send_message(
+        message.chat.id,
+        "🧑‍💻 Admin orqali hisob to‘ldirish uchun pastdagi tugmani bosing:",
+        reply_markup=markup
+    )
 
 
 # ===== QOLLAB QUVVATLASH =====
@@ -260,7 +315,7 @@ def kabinet(message):
 """
 
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.row("💸 Pul ishlash", "🌐 Tilni o‘zgartirish")
+    markup.row("💸 Pul ishlash")
     markup.row("➡️ Pul o‘tkazish", "🔙 Orqaga")
 
     bot.send_message(message.chat.id, text, reply_markup=markup)
@@ -327,17 +382,18 @@ def send_broadcast(message):
     if message.from_user.id != ADMIN_ID:
         return
 
-    try:
-        with open("users.json", "r") as f:
-            users = json.load(f)
-    except:
-        users = {}
+    global users
 
-    for user_id in users:
+    count = 0
+
+    for user in users:
         try:
-            bot.send_message(user_id, message.text)
+            bot.send_message(user["id"], message.text)
+            count += 1
         except Exception as e:
-            print(e)
+            print("Xato:", e)
+
+    bot.send_message(message.chat.id, f"✅ {count} ta userga yuborildi")
 @bot.message_handler(func=lambda m: m.text == "👥 Userlar")
 def show_users(message):
     if message.from_user.id != ADMIN_ID:
@@ -429,5 +485,30 @@ def run_web():
     app.run(host="0.0.0.0", port=10000)
 
 threading.Thread(target=run_web).start()
+
+# ⭐ Pre-checkout
+@bot.pre_checkout_query_handler(func=lambda query: True)
+def checkout(pre_checkout_q):
+    bot.answer_pre_checkout_query(pre_checkout_q.id, ok=True)
+
+
+# ⭐ To‘lov muvaffaqiyatli bo‘lsa
+@bot.message_handler(content_types=['successful_payment'])
+def successful_payment(message):
+    user_id = message.from_user.id
+    stars = message.successful_payment.total_amount
+
+    for user in users:
+        if user.get("id") == user_id:
+            user["stars"] = user.get("stars", 0) + stars
+            break
+
+    with open("users.json", "w") as f:
+        json.dump(users, f)
+
+    bot.send_message(
+        message.chat.id,
+        f"✅ To‘lov qabul qilindi!\n⭐ {stars} Stars qo‘shildi"
+    )
 
 bot.infinity_polling()
